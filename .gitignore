@@ -1,0 +1,70 @@
+# Unreal Engine project
+Binaries/
+DerivedDataCache/
+Intermediate/
+Saved/
+
+# Unreal Engine generated project files
+*.sln
+*.xcodeproj
+*.xcworkspace
+*.xcuserdata/
+*.xcuserstate
+
+# Visual Studio / IDE user state
+.vs/
+.vscode/
+.idea/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.rsuser
+*.VC.db
+*.VC.opendb
+*.opensdf
+*.opendb
+*.sdf
+*.ipch
+*.iobj
+*.ipdb
+
+# Unreal Engine plugin generated files
+Plugins/*/Binaries/
+Plugins/*/Intermediate/
+Plugins/*/DerivedDataCache/
+Plugins/*/Saved/
+
+# Local editor and developer-only content
+Content/Developers/
+Collections/
+
+# Build/package output
+Build/Receipts/
+Build/*/FileOpenOrder/
+Saved/Cooked/
+Saved/StagedBuilds/
+Saved/Crashes/
+Saved/Logs/
+Saved/Autosaves/
+Saved/Backup/
+
+# Compiled binaries and debug symbols
+*.dll
+*.exe
+*.lib
+*.obj
+*.pdb
+*.ilk
+*.exp
+
+# OS and archive noise
+.DS_Store
+Thumbs.db
+Desktop.ini
+*.tmp
+*.temp
+*.log
+*.zip
+*.7z
+*.rar
