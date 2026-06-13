@@ -16,13 +16,13 @@ class AFPSdemoGameMode : public AGameModeBase
 public:
 	AFPSdemoGameMode();
 
-	//统计分数
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Game")
-	int32 Score = 0;
+	////统计分数
+	//UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Game")
+	//int32 Score = 0;
 
-	//统计剩余敌人数量
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Game")
-	int32 RemainingEnemies = 0;
+	////统计剩余敌人数量
+	//UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Game")
+	//int32 RemainingEnemies = 0;
 
 	//注册敌人
 	UFUNCTION(BlueprintCallable, Category = "Game")

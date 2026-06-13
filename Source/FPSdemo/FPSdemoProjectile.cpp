@@ -39,12 +39,33 @@ AFPSdemoProjectile::AFPSdemoProjectile()
 void AFPSdemoProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& Hit)
 {
 	
-	AEnemyCharacter* Enemy = Cast<AEnemyCharacter>(OtherActor); //获取被击中的Actor，并尝试转换为AEnemyCharacter类型
-
-	if (Enemy)
+	if (!HasAuthority())
 	{
-		Enemy->ReceiveDamage(25.0f);
-		Destroy();//销毁子弹
 		return;
 	}
+
+	if (OtherActor && OtherActor != this)
+	{
+		AEnemyCharacter* Enemy = Cast<AEnemyCharacter>(OtherActor);
+
+		if (Enemy)
+		{
+			Enemy->ReceiveDamage(25.0f);
+
+			if (GEngine)
+			{
+				GEngine->AddOnScreenDebugMessage(
+					-1,
+					2.0f,
+					FColor::Green,
+					TEXT("Server Projectile Hit Enemy")
+				);
+			}
+
+			Destroy();
+			return;
+		}
+	}
+
+	Destroy();
 }

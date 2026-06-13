@@ -40,6 +40,12 @@ AEnemyCharacter::AEnemyCharacter()
     );
     //
     GetCharacterMovement()->MaxWalkSpeed = MoveSpeed;
+
+    PrimaryActorTick.bCanEverTick = true;
+
+    bReplicates = true;
+    SetReplicateMovement(true);
+
 }
 
 // Called when the game starts or when spawned
@@ -123,6 +129,11 @@ void AEnemyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 
 void AEnemyCharacter::ReceiveDamage(float DamageAmount)
 {
+    if (!HasAuthority())
+    {
+        return;
+    }
+
     if (bIsDead)
     {
         return;
@@ -210,6 +221,11 @@ void AEnemyCharacter::OnDamageSphereEndOverlap(
 
 void AEnemyCharacter::ApplyDamageToPlayer()
 {
+    if (!HasAuthority())
+    {
+        return;
+    }
+
     AFPSdemoCharacter* Player = Cast<AFPSdemoCharacter>(CurrentTargetPlayer);
 
     if (Player)

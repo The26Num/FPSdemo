@@ -5,7 +5,9 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
 #include "Logging/LogMacros.h"
+#include "Net/UnrealNetwork.h"
 #include "FPSdemoCharacter.generated.h"
+
 
 //前向声明
 class UInputComponent;
@@ -17,6 +19,7 @@ struct FInputActionValue;
 class UMyUserWidget;
 class UStaticMeshComponent;
 class AFPSdemoProjectile;
+
 
 
 DECLARE_LOG_CATEGORY_EXTERN(LogTemplateCharacter, Log, All);
@@ -56,18 +59,14 @@ public:
 	/** Look Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	class UInputAction* LookAction;
+
 	//人物的最大生命值
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Player")
 	float MaxHealth = 100.0f;
-	//人物的当前生命值
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Player")
-	float CurrentHealth;
+
 	//受到伤害函数
 	UFUNCTION(BlueprintCallable, Category = "Player")
 	void ReceiveDamage(float DamageAmount);
-	//人物是否死亡
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Player", meta = (AllowPrivateAccess = "true"))
-	bool bIsDead = false;
 
 	//人物死亡函数
 	void Die();
@@ -86,6 +85,10 @@ public:
 		FVector InMuzzleOffset
 	);
 
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
+
+
 
 
 protected:
@@ -95,12 +98,25 @@ protected:
 	/** Called for looking input */
 	void Look(const FInputActionValue& Value);
 
+	//人物的当前生命值
+	UPROPERTY(ReplicatedUsing = OnRep_CurrentHealth, VisibleAnywhere, BlueprintReadOnly, Category = "Player")
+	float CurrentHealth;
+
+	//人物是否死亡
+	UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadOnly, Category = "Player", meta = (AllowPrivateAccess = "true"))
+	bool bIsDead = false;
+
 	//
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "UI")
 	TSubclassOf<UMyUserWidget> HUDWidgetClass;
 
 	UPROPERTY()
 	UMyUserWidget* HUDWidget;
+
+	UFUNCTION()
+	void OnRep_CurrentHealth();
+
+	void UpdateHealthDisplay();
 
 protected:
 	// APawn interface

@@ -17,6 +17,9 @@
 #include "Kismet/GameplayStatics.h"
 #include "FPSdemoGameMode.h"
 #include "Components/StaticMeshComponent.h"
+#include "Net/UnrealNetwork.h"
+#include "FPSdemoGameState.h"
+
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
 
@@ -56,7 +59,11 @@ void AFPSdemoCharacter::BeginPlay()
 {
 	// Call the base class  
 	Super::BeginPlay();
-	CurrentHealth = MaxHealth;
+	
+	if (HasAuthority())
+	{
+		CurrentHealth = MaxHealth;
+	}
 
 	//¿ØÖÆUI
 	if (IsLocallyControlled() && HUDWidgetClass)
@@ -75,14 +82,13 @@ void AFPSdemoCharacter::BeginPlay()
 			HUDWidget->SetEnemyLeft(0);
 			HUDWidget->ShowResult(TEXT(""));
 
-			AFPSdemoGameMode* GameMode = Cast<AFPSdemoGameMode>(
-				UGameplayStatics::GetGameMode(GetWorld())
-			);
+			AFPSdemoGameState* FPSGameState = GetWorld()
+				? GetWorld()->GetGameState<AFPSdemoGameState>()
+				: nullptr;
 
-			if (GameMode)
+			if (FPSGameState)
 			{
-				HUDWidget->SetScore(GameMode->Score);
-				HUDWidget->SetEnemyLeft(GameMode->RemainingEnemies);
+				FPSGameState->UpdateLocalHUD();
 			}
 		}
 	}
@@ -140,6 +146,11 @@ void AFPSdemoCharacter::Look(const FInputActionValue& Value)
 
 void AFPSdemoCharacter::ReceiveDamage(float DamageAmount)
 {
+	if (!HasAuthority())
+	{
+		return;
+	}
+
 	if (bIsDead)
 	{
 		return;
@@ -251,4 +262,31 @@ void AFPSdemoCharacter::FireProjectileOnServer(
 		SpawnRotation,
 		SpawnParams
 	);
+}
+
+void AFPSdemoCharacter::GetLifetimeReplicatedProps(
+	TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(AFPSdemoCharacter, CurrentHealth);
+	DOREPLIFETIME(AFPSdemoCharacter, bIsDead);
+}
+
+void AFPSdemoCharacter::OnRep_CurrentHealth()
+{
+	if (HUDWidget)
+	{
+		HUDWidget->SetHealth(CurrentHealth);
+	}
+
+	if (GEngine)
+	{
+		GEngine->AddOnScreenDebugMessage(
+			-1,
+			2.0f,
+			FColor::Yellow,
+			FString::Printf(TEXT("CLIENT Player HP Updated: %.1f"), CurrentHealth)
+		);
+	}
 }
