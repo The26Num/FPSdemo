@@ -19,6 +19,7 @@
 #include "Components/StaticMeshComponent.h"
 #include "Net/UnrealNetwork.h"
 #include "FPSdemoGameState.h"
+#include "TP_WeaponComponent.h"
 
 
 DEFINE_LOG_CATEGORY(LogTemplateCharacter);
@@ -288,5 +289,89 @@ void AFPSdemoCharacter::OnRep_CurrentHealth()
 			FColor::Yellow,
 			FString::Printf(TEXT("CLIENT Player HP Updated: %.1f"), CurrentHealth)
 		);
+	}
+}
+
+
+void AFPSdemoCharacter::SetEquippedWeapon(UTP_WeaponComponent* NewWeapon)
+{
+	EquippedWeapon = NewWeapon;
+}
+
+void AFPSdemoCharacter::ServerFireEquippedWeapon_Implementation()
+{
+	if (!EquippedWeapon)
+	{
+		return;
+	}
+
+	EquippedWeapon->TryFireOnServer();
+}
+
+void AFPSdemoCharacter::ServerReloadEquippedWeapon_Implementation()
+{
+	if (!EquippedWeapon)
+	{
+		return;
+	}
+
+	EquippedWeapon->TryReloadOnServer();
+}
+
+void AFPSdemoCharacter::ClientUpdateAmmoHUD_Implementation(
+	int32 NewCurrentAmmo,
+	int32 NewMaxAmmo,
+	bool bNewIsReloading)
+{
+	if (HUDWidget)
+	{
+		HUDWidget->SetAmmo(NewCurrentAmmo, NewMaxAmmo);
+	}
+
+	if (GEngine && bNewIsReloading)
+	{
+		GEngine->AddOnScreenDebugMessage(
+			-1,
+			1.5f,
+			FColor::Yellow,
+			TEXT("Reloading...")
+		);
+	}
+}
+
+void UTP_WeaponComponent::PlayFireEffects()
+{
+	if (!Character)
+	{
+		return;
+	}
+
+	// 播放开火声音
+	if (FireSound != nullptr)
+	{
+		UGameplayStatics::PlaySoundAtLocation(
+			this,
+			FireSound,
+			Character->GetActorLocation()
+		);
+	}
+
+	// 播放第一人称开火动画
+	if (FireAnimation != nullptr && Character->GetMesh1P())
+	{
+		UAnimInstance* AnimInstance = Character->GetMesh1P()->GetAnimInstance();
+
+		if (AnimInstance != nullptr)
+		{
+			AnimInstance->Montage_Play(FireAnimation, 1.f);
+		}
+	}
+}
+
+void AFPSdemoCharacter::ClientPlayFireEffects_Implementation()
+{
+	if (EquippedWeapon)
+	{
+		EquippedWeapon->PlayFireEffects();
 	}
 }

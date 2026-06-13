@@ -26,92 +26,20 @@ UTP_WeaponComponent::UTP_WeaponComponent()
 
 void UTP_WeaponComponent::Fire()
 {
-
-	if (bIsReloading)
-	{
-		if (GEngine)
-		{
-			GEngine->AddOnScreenDebugMessage(
-				-1,
-				1.5f,
-				FColor::Yellow,
-				TEXT("Reloading...")
-			);
-		}
-		return;
-	}
-
-	if (CurrentAmmo <= 0)
-	{
-		if (GEngine)
-		{
-			GEngine->AddOnScreenDebugMessage(
-				-1,
-				2.0f,
-				FColor::Red,
-				TEXT("Out of Ammo! Press R to Reload")
-			);
-		}
-		return;
-	}
-
-	CurrentAmmo--;
-
-	if (Character && Character->GetHUDWidget())
-	{
-		Character->GetHUDWidget()->SetAmmo(CurrentAmmo, MaxAmmo);
-	}
-
-	if (Character == nullptr || Character->GetController() == nullptr)
+	if (!Character)
 	{
 		return;
 	}
 
-	// Try and fire a projectile
-	if (ProjectileClass != nullptr)
+	// Server 玩家：直接执行服务器开火逻辑
+	if (Character->HasAuthority())
 	{
-		UWorld* const World = GetWorld();
-		if (World != nullptr)
-		{
-			APlayerController* PlayerController = Cast<APlayerController>(Character->GetController());
-			const FRotator SpawnRotation = PlayerController->PlayerCameraManager->GetCameraRotation();
-			// MuzzleOffset is in camera space, so transform it to world space before offsetting from the character location to find the final muzzle position
-			const FVector SpawnLocation = GetOwner()->GetActorLocation() + SpawnRotation.RotateVector(MuzzleOffset);
-	
-			//Set Spawn Collision Handling Override
-			FActorSpawnParameters ActorSpawnParams;
-			ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButDontSpawnIfColliding;
-	
-			//换成网络方式生成子弹
-			if (Character)
-			{
-				if (Character->HasAuthority())
-				{
-					Character->FireProjectileOnServer(ProjectileClass, MuzzleOffset);
-				}
-				else
-				{
-					Character->ServerFireProjectile(ProjectileClass, MuzzleOffset);
-				}
-			}
-		}
+		TryFireOnServer();
 	}
-	
-	// Try and play the sound if specified
-	if (FireSound != nullptr)
+	else
 	{
-		UGameplayStatics::PlaySoundAtLocation(this, FireSound, Character->GetActorLocation());
-	}
-	
-	// Try and play a firing animation if specified
-	if (FireAnimation != nullptr)
-	{
-		// Get the animation object for the arms mesh
-		UAnimInstance* AnimInstance = Character->GetMesh1P()->GetAnimInstance();
-		if (AnimInstance != nullptr)
-		{
-			AnimInstance->Montage_Play(FireAnimation, 1.f);
-		}
+		// Client 玩家：请求 Server 使用当前装备武器开火
+		Character->ServerFireEquippedWeapon();
 	}
 }
 
@@ -119,40 +47,53 @@ bool UTP_WeaponComponent::AttachWeapon(AFPSdemoCharacter* TargetCharacter)
 {
 	Character = TargetCharacter;
 
-	// Check that the character is valid, and has no weapon component yet
+	// 检查角色是否有效，以及角色是否已经有武器
 	if (Character == nullptr || Character->GetInstanceComponents().FindItemByClass<UTP_WeaponComponent>())
 	{
 		return false;
 	}
 
-	// Attach the weapon to the First Person Character
+	// 挂载武器到第一人称手臂的 GripPoint
 	FAttachmentTransformRules AttachmentRules(EAttachmentRule::SnapToTarget, true);
 	AttachToComponent(Character->GetMesh1P(), AttachmentRules, FName(TEXT("GripPoint")));
 
-	// add the weapon as an instance component to the character
+	// 把武器组件加入角色实例组件
 	Character->AddInstanceComponent(this);
 
-	CurrentAmmo = MaxAmmo;
+	// 记录当前装备武器
+	Character->SetEquippedWeapon(this);
 
-	if (Character && Character->GetHUDWidget())
+	// 只有 Server 初始化权威 Ammo
+	if (Character->HasAuthority())
 	{
-		Character->GetHUDWidget()->SetAmmo(CurrentAmmo, MaxAmmo);
+		CurrentAmmo = MaxAmmo;
+		bIsReloading = false;
 	}
 
-	// Set up action bindings
+	// 刷新拥有者 HUD
+	UpdateAmmoToOwner();
+
+	// 设置输入绑定
 	if (APlayerController* PlayerController = Cast<APlayerController>(Character->GetController()))
 	{
-		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
+		if (UEnhancedInputLocalPlayerSubsystem* Subsystem =
+			ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
 		{
-			// Set the priority of the mapping to 1, so that it overrides the Jump action with the Fire action when using touch input
 			Subsystem->AddMappingContext(FireMappingContext, 1);
 		}
 
-		if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerController->InputComponent))
+		if (UEnhancedInputComponent* EnhancedInputComponent =
+			Cast<UEnhancedInputComponent>(PlayerController->InputComponent))
 		{
-			// Fire
-			EnhancedInputComponent->BindAction(FireAction, ETriggerEvent::Triggered, this, &UTP_WeaponComponent::Fire);
+			// 开火
+			EnhancedInputComponent->BindAction(
+				FireAction,
+				ETriggerEvent::Triggered,
+				this,
+				&UTP_WeaponComponent::Fire
+			);
 
+			// 换弹
 			if (ReloadAction)
 			{
 				EnhancedInputComponent->BindAction(
@@ -186,6 +127,127 @@ void UTP_WeaponComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 
 void UTP_WeaponComponent::Reload()
 {
+	if (!Character)
+	{
+		return;
+	}
+
+	// Server 玩家：直接执行服务器换弹逻辑
+	if (Character->HasAuthority())
+	{
+		TryReloadOnServer();
+	}
+	else
+	{
+		// Client 玩家：请求 Server 换弹
+		Character->ServerReloadEquippedWeapon();
+	}
+}
+
+void UTP_WeaponComponent::FinishReload()
+{
+	if (!Character)
+	{
+		return;
+	}
+
+	// 只有 Server 可以完成换弹
+	if (!Character->HasAuthority())
+	{
+		return;
+	}
+
+	CurrentAmmo = MaxAmmo;
+	bIsReloading = false;
+
+	UpdateAmmoToOwner();
+
+	if (GEngine)
+	{
+		GEngine->AddOnScreenDebugMessage(
+			-1,
+			1.5f,
+			FColor::Green,
+			TEXT("Reload Complete")
+		);
+	}
+}
+
+void UTP_WeaponComponent::TryFireOnServer()
+{
+	if (!Character)
+	{
+		return;
+	}
+
+	// 只有 Server 可以真正判断 Ammo 和生成子弹
+	if (!Character->HasAuthority())
+	{
+		return;
+	}
+
+	if (bIsReloading)
+	{
+		UpdateAmmoToOwner();
+		return;
+	}
+
+	if (CurrentAmmo <= 0)
+	{
+		UpdateAmmoToOwner();
+
+		if (GEngine)
+		{
+			GEngine->AddOnScreenDebugMessage(
+				-1,
+				1.5f,
+				FColor::Red,
+				TEXT("Out of Ammo! Press R to Reload")
+			);
+		}
+
+		return;
+	}
+
+	// Server 扣 Ammo
+	CurrentAmmo--;
+
+	// 通知拥有者刷新 HUD
+	UpdateAmmoToOwner();
+
+	// Server 生成子弹
+	if (ProjectileClass)
+	{
+		Character->FireProjectileOnServer(ProjectileClass, MuzzleOffset);
+	}
+
+
+	// 播放开火效果
+	if (Character->IsLocallyControlled())
+	{
+		// Listen Server 玩家自己开火
+		PlayFireEffects();
+	}
+	else
+	{
+		// Client 玩家开火：通知这个 Client 播放自己的声音和动画
+		Character->ClientPlayFireEffects();
+	}
+}
+
+void UTP_WeaponComponent::TryReloadOnServer()
+{
+	if (!Character)
+	{
+		return;
+	}
+
+	// 只有 Server 可以真正开始换弹
+	if (!Character->HasAuthority())
+	{
+		return;
+	}
+
 	if (bIsReloading)
 	{
 		return;
@@ -193,19 +255,13 @@ void UTP_WeaponComponent::Reload()
 
 	if (CurrentAmmo >= MaxAmmo)
 	{
-		if (GEngine)
-		{
-			GEngine->AddOnScreenDebugMessage(
-				-1,
-				1.5f,
-				FColor::Cyan,
-				TEXT("Ammo already full")
-			);
-		}
+		UpdateAmmoToOwner();
 		return;
 	}
 
 	bIsReloading = true;
+
+	UpdateAmmoToOwner();
 
 	if (GEngine)
 	{
@@ -226,23 +282,26 @@ void UTP_WeaponComponent::Reload()
 	);
 }
 
-void UTP_WeaponComponent::FinishReload()
+void UTP_WeaponComponent::UpdateAmmoToOwner()
 {
-	CurrentAmmo = MaxAmmo;
-	bIsReloading = false;
+	if (!Character)
+	{
+		return;
+	}
 
-	if (Character && Character->GetHUDWidget())
+	// Listen Server 自己控制的角色，直接刷新本地 HUD
+	if (Character->IsLocallyControlled() && Character->GetHUDWidget())
 	{
 		Character->GetHUDWidget()->SetAmmo(CurrentAmmo, MaxAmmo);
 	}
 
-	if (GEngine)
+	// Server 通知拥有者 Client 刷新 HUD
+	if (Character->HasAuthority())
 	{
-		GEngine->AddOnScreenDebugMessage(
-			-1,
-			1.5f,
-			FColor::Green,
-			TEXT("Reload Complete")
+		Character->ClientUpdateAmmoHUD(
+			CurrentAmmo,
+			MaxAmmo,
+			bIsReloading
 		);
 	}
 }

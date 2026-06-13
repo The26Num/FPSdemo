@@ -72,6 +72,17 @@ public:
 
 	FTimerHandle ReloadTimerHandle;
 
+	// 只允许 Server 调用：真正检查 Ammo、扣 Ammo、生成子弹
+	void TryFireOnServer();
+
+	// 只允许 Server 调用：真正开始换弹
+	void TryReloadOnServer();
+
+	// 刷新拥有者 HUD
+	void UpdateAmmoToOwner();
+
+	void PlayFireEffects();
+
 protected:
 	/** Ends gameplay for this component. */
 	UFUNCTION()

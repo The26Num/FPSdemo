@@ -19,6 +19,7 @@ struct FInputActionValue;
 class UMyUserWidget;
 class UStaticMeshComponent;
 class AFPSdemoProjectile;
+class UTP_WeaponComponent;
 
 
 
@@ -87,9 +88,26 @@ public:
 
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
+	// 设置当前装备的武器
+	void SetEquippedWeapon(UTP_WeaponComponent* NewWeapon);
 
+	// 获取当前装备武器
+	UTP_WeaponComponent* GetEquippedWeapon() const { return EquippedWeapon; }
 
+	// Client 请求 Server 开火：Server 会去找 EquippedWeapon
+	UFUNCTION(Server, Reliable)
+	void ServerFireEquippedWeapon();
 
+	// Client 请求 Server 换弹
+	UFUNCTION(Server, Reliable)
+	void ServerReloadEquippedWeapon();
+
+	// Server 通知拥有者客户端刷新 Ammo HUD
+	UFUNCTION(Client, Reliable)
+	void ClientUpdateAmmoHUD(int32 NewCurrentAmmo, int32 NewMaxAmmo, bool bNewIsReloading);
+
+	UFUNCTION(Client, Reliable)
+	void ClientPlayFireEffects();
 
 protected:
 	/** Called for movement input */
@@ -117,6 +135,9 @@ protected:
 	void OnRep_CurrentHealth();
 
 	void UpdateHealthDisplay();
+
+	UPROPERTY()
+	UTP_WeaponComponent* EquippedWeapon;
 
 protected:
 	// APawn interface
