@@ -60,6 +60,19 @@ void AFPSdemoCharacter::BeginPlay()
 {
 	// Call the base class  
 	Super::BeginPlay();
+
+	if (IsLocallyControlled())
+	{
+		APlayerController* PC = Cast<APlayerController>(GetController());
+
+		if (PC)
+		{
+			PC->bShowMouseCursor = false;
+
+			FInputModeGameOnly InputMode;
+			PC->SetInputMode(InputMode);
+		}
+	}
 	
 	if (HasAuthority())
 	{

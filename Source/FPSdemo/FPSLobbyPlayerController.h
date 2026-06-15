@@ -35,6 +35,8 @@ public:
 	UFUNCTION(Client, Reliable)
 	void ClientLobbyMessage(const FString& Message);
 
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Lobby UI")
 	TSubclassOf<ULobbyUserWidget> LobbyWidgetClass;

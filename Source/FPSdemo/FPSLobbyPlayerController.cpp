@@ -100,3 +100,14 @@ void AFPSLobbyPlayerController::ClientLobbyMessage_Implementation(const FString&
 		);
 	}
 }
+
+void AFPSLobbyPlayerController::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	if (LobbyWidget)
+	{
+		LobbyWidget->RemoveFromParent();
+		LobbyWidget = nullptr;
+	}
+
+	Super::EndPlay(EndPlayReason);
+}
