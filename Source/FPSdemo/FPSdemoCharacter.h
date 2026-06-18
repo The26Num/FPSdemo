@@ -109,6 +109,9 @@ public:
 	UFUNCTION(Client, Reliable)
 	void ClientPlayFireEffects();
 
+	UFUNCTION(Client, Reliable)
+	void ClientUpdatePersonalScoreHUD(int32 NewScore);
+
 protected:
 	/** Called for movement input */
 	void Move(const FInputActionValue& Value);

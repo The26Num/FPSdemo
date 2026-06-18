@@ -40,6 +40,15 @@ public:
 	// 更新当前本地玩家的 HUD
 	void UpdateLocalHUD();
 
+	UPROPERTY(ReplicatedUsing = OnRep_RemainingTime, VisibleAnywhere, BlueprintReadOnly, Category = "Game")
+	int32 RemainingTime = 20;
+
+	void SetRemainingTime(int32 NewTime);
+
+	UFUNCTION()
+	void OnRep_RemainingTime();
+
+
 
 protected:
 	UFUNCTION()
@@ -53,4 +62,5 @@ protected:
 
 
 	void PrintGameState();
+
 };

@@ -7,6 +7,8 @@
 #include "FPSdemoGameMode.generated.h"
 
 class AEnemyCharacter;
+class ATargetPoint;
+class AFPSdemoCharacter;
 
 UCLASS(minimalapi)
 class AFPSdemoGameMode : public AGameModeBase
@@ -30,7 +32,53 @@ public:
 
 	//敌人被击杀时调用
 	UFUNCTION(BlueprintCallable, Category = "Game")
-	void OnEnemyKilled(AEnemyCharacter* Enemy, int32 ScoreValue);
+	void OnEnemyKilled(AEnemyCharacter* Enemy, int32 ScoreValue, AFPSdemoCharacter* KillerCharacter);
+
+	UPROPERTY(EditDefaultsOnly, Category = "Match")
+	int32 MatchDuration = 180;
+
+	int32 CurrentRemainingTime = 180;
+
+	bool bMatchEnded = false;
+
+	FTimerHandle MatchTimerHandle;
+
+	void StartMatchTimer();
+
+	void TickMatchTimer();
+
+	void FinishMatch();
+
+protected:
+	virtual void BeginPlay() override;
+
+	// 要生成的敌人蓝图类
+	UPROPERTY(EditDefaultsOnly, Category = "Enemy Spawn")
+	TSubclassOf<AEnemyCharacter> EnemyClass;
+
+	// 场上最多同时存在几个敌人
+	UPROPERTY(EditDefaultsOnly, Category = "Enemy Spawn")
+	int32 MaxAliveEnemies = 4;
+
+	// 敌人死亡后几秒补一个
+	UPROPERTY(EditDefaultsOnly, Category = "Enemy Spawn")
+	float RespawnDelay = 3.0f;
+
+	// 所有刷怪点
+	UPROPERTY()
+	TArray<ATargetPoint*> EnemySpawnPoints;
+
+	FTimerHandle InitialSpawnTimerHandle;
+
+	void FindEnemySpawnPoints();
+
+	void SpawnInitialEnemies();
+
+	void SpawnOneEnemy();
+
+	void SpawnEnemyAtPoint(ATargetPoint* SpawnPoint);
+
+	void ScheduleEnemyRespawn();
 };
 
 

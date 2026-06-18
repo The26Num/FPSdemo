@@ -4,6 +4,7 @@
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Components/SphereComponent.h"
 #include "EnemyCharacter.h"
+#include "FPSdemoCharacter.h"
 
 AFPSdemoProjectile::AFPSdemoProjectile() 
 {
@@ -50,7 +51,9 @@ void AFPSdemoProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor,
 
 		if (Enemy)
 		{
-			Enemy->ReceiveDamage(25.0f);
+			AFPSdemoCharacter* DamageCauser = Cast<AFPSdemoCharacter>(GetOwner());
+
+			Enemy->ReceiveDamage(25.0f, DamageCauser);
 
 			if (GEngine)
 			{

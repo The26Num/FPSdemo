@@ -388,3 +388,11 @@ void AFPSdemoCharacter::ClientPlayFireEffects_Implementation()
 		EquippedWeapon->PlayFireEffects();
 	}
 }
+
+void AFPSdemoCharacter::ClientUpdatePersonalScoreHUD_Implementation(int32 NewScore)
+{
+	if (HUDWidget)
+	{
+		HUDWidget->SetScore(NewScore);
+	}
+}

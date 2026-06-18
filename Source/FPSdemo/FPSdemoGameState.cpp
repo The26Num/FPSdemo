@@ -10,6 +10,7 @@ AFPSdemoGameState::AFPSdemoGameState()
 	Score = 0;
 	RemainingEnemies = 0;
 	ResultMessage = TEXT("");
+	RemainingTime = 20;
 }
 
 void AFPSdemoGameState::GetLifetimeReplicatedProps(
@@ -21,6 +22,8 @@ void AFPSdemoGameState::GetLifetimeReplicatedProps(
 	DOREPLIFETIME(AFPSdemoGameState, Score);
 	DOREPLIFETIME(AFPSdemoGameState, RemainingEnemies);
 	DOREPLIFETIME(AFPSdemoGameState, ResultMessage);
+	DOREPLIFETIME(AFPSdemoGameState, RemainingTime);
+	
 }
 
 void AFPSdemoGameState::AddScore(int32 ScoreValue)
@@ -105,9 +108,10 @@ void AFPSdemoGameState::UpdateLocalHUD()
 		return;
 	}
 
-	HUD->SetScore(Score);
+	//HUD->SetScore(Score);
 	HUD->SetEnemyLeft(RemainingEnemies);
 	HUD->ShowResult(ResultMessage);
+	HUD->SetTime(RemainingTime);
 }
 
 void AFPSdemoGameState::PrintGameState()
@@ -126,3 +130,21 @@ void AFPSdemoGameState::PrintGameState()
 		);
 	}
 }
+
+void AFPSdemoGameState::SetRemainingTime(int32 NewTime)
+{
+	if (!HasAuthority())
+	{
+		return;
+	}
+
+	RemainingTime = FMath::Max(0, NewTime);
+
+	UpdateLocalHUD();
+}
+
+void AFPSdemoGameState::OnRep_RemainingTime()
+{
+	UpdateLocalHUD();
+}
+

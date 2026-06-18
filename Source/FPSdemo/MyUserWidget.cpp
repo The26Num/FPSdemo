@@ -59,3 +59,15 @@ void UMyUserWidget::SetAmmo(int32 CurrentAmmo, int32 MaxAmmo)
 		);
 	}
 }
+
+void UMyUserWidget::SetTime(int32 NewTime)
+{
+	if (Text_Time)
+	{
+		Text_Time->SetText(
+			FText::FromString(
+				FString::Printf(TEXT("Time: %d"), NewTime)
+			)
+		);
+	}
+}

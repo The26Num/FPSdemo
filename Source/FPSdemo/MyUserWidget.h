@@ -32,6 +32,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "HUD")
 	void SetAmmo(int32 CurrentAmmo, int32 MaxAmmo);
 
+	UFUNCTION(BlueprintCallable, Category = "HUD")
+	void SetTime(int32 NewTime);
+
 protected:
 	UPROPERTY(meta = (BindWidget))
 	UTextBlock* Text_HP;
@@ -47,4 +50,7 @@ protected:
 
 	UPROPERTY(meta = (BindWidget))
 	UTextBlock* Text_Ammo;
+
+	UPROPERTY(meta = (BindWidget))
+	UTextBlock* Text_Time;
 };

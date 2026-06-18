@@ -127,7 +127,7 @@ void AEnemyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 
 }
 
-void AEnemyCharacter::ReceiveDamage(float DamageAmount)
+void AEnemyCharacter::ReceiveDamage(float DamageAmount, AFPSdemoCharacter* DamageCauser)
 {
     if (!HasAuthority())
     {
@@ -140,7 +140,7 @@ void AEnemyCharacter::ReceiveDamage(float DamageAmount)
     }
     CurrentHealth -= DamageAmount;
 
-    if (GEngine)
+   /* if (GEngine)
     {
         GEngine->AddOnScreenDebugMessage(
             -1,
@@ -150,7 +150,7 @@ void AEnemyCharacter::ReceiveDamage(float DamageAmount)
                 TEXT("Enemy HP: %.1f"),
                 CurrentHealth)
         );
-    }
+    }*/
 
     if (CurrentHealth <= 0.0f)
     {
@@ -162,7 +162,7 @@ void AEnemyCharacter::ReceiveDamage(float DamageAmount)
 
         if (GameMode)
         {
-            GameMode->OnEnemyKilled(this, ScoreValue);
+            GameMode->OnEnemyKilled(this, ScoreValue, DamageCauser);
         }
 
         Destroy();

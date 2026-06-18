@@ -28,7 +28,7 @@ public:
 
 	// 受到伤害函数
 	UFUNCTION(BlueprintCallable, Category = "Enemy")
-	void ReceiveDamage(float DamageAmount);
+	void ReceiveDamage(float DamageAmount, AFPSdemoCharacter* DamageCauser);
 
 	// 伤害范围碰撞组件
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Enemy")
