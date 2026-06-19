@@ -10,7 +10,7 @@ AFPSdemoGameState::AFPSdemoGameState()
 	Score = 0;
 	RemainingEnemies = 0;
 	ResultMessage = TEXT("");
-	RemainingTime = 20;
+	RemainingTime = 180;
 }
 
 void AFPSdemoGameState::GetLifetimeReplicatedProps(
@@ -110,8 +110,14 @@ void AFPSdemoGameState::UpdateLocalHUD()
 
 	//HUD->SetScore(Score);
 	HUD->SetEnemyLeft(RemainingEnemies);
-	HUD->ShowResult(ResultMessage);
+	//HUD->ShowResult(ResultMessage);
 	HUD->SetTime(RemainingTime);
+
+	// 不要用空字符串反复覆盖结果
+	if (!ResultMessage.IsEmpty())
+	{
+		HUD->ShowResult(ResultMessage);
+	}
 }
 
 void AFPSdemoGameState::PrintGameState()

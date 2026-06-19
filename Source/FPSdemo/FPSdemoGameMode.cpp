@@ -443,3 +443,93 @@ void AFPSdemoGameMode::FinishMatch()
 		);
 	}
 }
+
+void AFPSdemoGameMode::OnPlayerDied(AFPSdemoCharacter* DeadCharacter)
+{
+	if (!HasAuthority())
+	{
+		return;
+	}
+
+	if (GEngine)
+	{
+		GEngine->AddOnScreenDebugMessage(
+			-1,
+			10.0f,
+			FColor::Yellow,
+			TEXT("GameMode received OnPlayerDied.")
+		);
+	}
+
+	if (bMatchEnded)
+	{
+		return;
+	}
+
+	bMatchEnded = true;
+
+	GetWorldTimerManager().ClearTimer(MatchTimerHandle);
+	GetWorldTimerManager().ClearTimer(InitialSpawnTimerHandle);
+
+	AFPSdemoGameState* FPSGameState = GetGameState<AFPSdemoGameState>();
+
+	if (!FPSGameState)
+	{
+		return;
+	}
+
+	AFPSdemoCharacter* WinnerCharacter = nullptr;
+
+	for (FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
+	{
+		APlayerController* PC = It->Get();
+
+		if (!PC)
+		{
+			continue;
+		}
+
+		AFPSdemoCharacter* PlayerCharacter = Cast<AFPSdemoCharacter>(PC->GetPawn());
+
+		if (!PlayerCharacter)
+		{
+			continue;
+		}
+
+		if (PlayerCharacter != DeadCharacter && !PlayerCharacter->IsDead())
+		{
+			WinnerCharacter = PlayerCharacter;
+			break;
+		}
+	}
+
+	if (WinnerCharacter)
+	{
+		APlayerState* WinnerPlayerState = WinnerCharacter->GetPlayerState();
+
+		FString WinnerName = WinnerPlayerState
+			? WinnerPlayerState->GetPlayerName()
+			: TEXT("Alive Player");
+
+		FPSGameState->SetResultMessage(
+			FString::Printf(
+				TEXT("GAME OVER! WINNER: %s"),
+				*WinnerName
+			)
+		);
+	}
+	else
+	{
+		FPSGameState->SetResultMessage(TEXT("GAME OVER! DRAW!"));
+	}
+
+	if (GEngine)
+	{
+		GEngine->AddOnScreenDebugMessage(
+			-1,
+			10.0f,
+			FColor::Yellow,
+			FPSGameState->ResultMessage
+		);
+	}
+}

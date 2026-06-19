@@ -41,7 +41,7 @@ public:
 	void UpdateLocalHUD();
 
 	UPROPERTY(ReplicatedUsing = OnRep_RemainingTime, VisibleAnywhere, BlueprintReadOnly, Category = "Game")
-	int32 RemainingTime = 20;
+	int32 RemainingTime = 180;
 
 	void SetRemainingTime(int32 NewTime);
 

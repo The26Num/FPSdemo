@@ -112,6 +112,11 @@ public:
 	UFUNCTION(Client, Reliable)
 	void ClientUpdatePersonalScoreHUD(int32 NewScore);
 
+	bool IsDead() const
+	{
+		return bIsDead;
+	}
+
 protected:
 	/** Called for movement input */
 	void Move(const FInputActionValue& Value);

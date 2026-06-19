@@ -171,6 +171,8 @@ void AFPSdemoCharacter::ReceiveDamage(float DamageAmount)
 	}
 
 	CurrentHealth -= DamageAmount;
+	CurrentHealth = FMath::Max(0.0f, CurrentHealth);
+
 	if (HUDWidget)
 	{
 		HUDWidget->SetHealth(CurrentHealth);
@@ -194,6 +196,11 @@ void AFPSdemoCharacter::ReceiveDamage(float DamageAmount)
 
 void AFPSdemoCharacter::Die()
 {
+	if (!HasAuthority())
+	{
+		return;
+	}
+
 	if (bIsDead)
 	{
 		return;
@@ -224,9 +231,29 @@ void AFPSdemoCharacter::Die()
 		MyController->SetIgnoreLookInput(true);
 	}
 
-	if (HUDWidget)
+	/*if (HUDWidget)
 	{
 		HUDWidget->ShowResult(TEXT("GAME OVER"));
+	}*/
+	AFPSdemoGameMode* GameMode = Cast<AFPSdemoGameMode>(
+		UGameplayStatics::GetGameMode(GetWorld())
+	);
+
+	if (GameMode)
+	{
+		GameMode->OnPlayerDied(this);
+	}
+	else
+	{
+		if (GEngine)
+		{
+			GEngine->AddOnScreenDebugMessage(
+				-1,
+				5.0f,
+				FColor::Red,
+				TEXT("GameMode is null in Die().")
+			);
+		}
 	}
 }
 

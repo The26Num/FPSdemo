@@ -35,7 +35,7 @@ public:
 	void OnEnemyKilled(AEnemyCharacter* Enemy, int32 ScoreValue, AFPSdemoCharacter* KillerCharacter);
 
 	UPROPERTY(EditDefaultsOnly, Category = "Match")
-	int32 MatchDuration = 180;
+	int32 MatchDuration = 20;
 
 	int32 CurrentRemainingTime = 180;
 
@@ -48,6 +48,8 @@ public:
 	void TickMatchTimer();
 
 	void FinishMatch();
+
+	void OnPlayerDied(AFPSdemoCharacter* DeadCharacter);
 
 protected:
 	virtual void BeginPlay() override;
