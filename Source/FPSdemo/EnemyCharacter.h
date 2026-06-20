@@ -73,7 +73,7 @@ public:
 
 	//移动速度
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Enemy|Move")
-	float MoveSpeed = 25.0f;
+	float MoveSpeed = 250.0f;
 
 	//停止距离，当敌人距离玩家小于这个值时停止移动
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Enemy|Move")
