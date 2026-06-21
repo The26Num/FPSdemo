@@ -93,6 +93,10 @@ GitHub 仓库地址：[The26Num/FPSdemo](https://github.com/The26Num/FPSdemo#)
 
 ## 6. 运行与测试方式
 
+测试前注意项目设置默认地图为MainMenuMap
+
+ue网络模式设置为Standalone模式
+
 本地双窗口测试流程如下：
 
 1. 第一个窗口进入 MainMenuMap，点击 Host LAN Game。
