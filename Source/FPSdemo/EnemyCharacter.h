@@ -47,7 +47,7 @@ public:
 
 	//碰撞伤害
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Enemy")
-	float TouchDamage = 10.0f;
+	float TouchDamage = 20.0f;
 
 	//伤害间隔
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Enemy")
@@ -73,7 +73,7 @@ public:
 
 	//移动速度
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Enemy|Move")
-	float MoveSpeed = 250.0f;
+	float MoveSpeed = 100.0f;
 
 	//停止距离，当敌人距离玩家小于这个值时停止移动
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Enemy|Move")
